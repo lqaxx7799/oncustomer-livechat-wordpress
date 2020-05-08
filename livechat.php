@@ -5,23 +5,25 @@
 * Version: 1.0
 * Author: OnCustomer
 * Author URI: https://oncustomer.asia/
+* License: GPLv2 or later
+* License URI: http://www.gnu.org/licenses/gpl-2.0.html
 **/
 
-define('LIVECHAT_URL', plugin_dir_url( __FILE__ ));
+define('OC_LIVECHAT_URL', plugin_dir_url( __FILE__ ));
 
 
-function add_oncustomer_livechat_settings_page(){
+function oc_add_livechat_settings_page(){
     add_menu_page(
         'OnCustomer Settings',
         'OnCustomer',
         'manage_options',
         'oncustomer',
-        'render_oncustomer_livechat_options_page',
+        'oc_render_livechat_options_page',
         'dashicons-format-status'
     );
 }
 
-function render_oncustomer_livechat_options_page(){
+function oc_render_livechat_options_page(){
     if (!current_user_can('manage_options'))
     {
         wp_die('You do not have sufficient permissions to access Livechat settings');
@@ -31,14 +33,14 @@ function render_oncustomer_livechat_options_page(){
 
     $targetUri = urlencode(get_site_url().'/wp-admin/admin.php?page=oncustomer');
 
-    $url = 'https://livechat.oncustomer.asia/integration?uri='.$targetUri;
-
-    $html = '<link rel="stylesheet" type="text/css" href="'.LIVECHAT_URL.'css/livechat.css" />';
+    $url = 'https://livechat.oncustomer.asia/integration?uri='.$targetUri.'&origin=wordpress';
     
+    wp_enqueue_style('livechat.css', OC_LIVECHAT_URL.'css/livechat.css');
+
     if($option == ''){
-        $html .= '
+        $html = '
             <div class="livechat-wrapper">
-                <div class="livechat-content"><img class="livechat-logo" src="'.LIVECHAT_URL.'images/logo.png" /></div>
+                <div class="livechat-content"><img class="livechat-logo" src="'.OC_LIVECHAT_URL.'images/logo.png" /></div>
                 <div class="livechat-content">
                     <span>
                         Kết nối ứng dụng với ứng dụng OnCustomer Livechat<br/>
@@ -54,15 +56,15 @@ function render_oncustomer_livechat_options_page(){
         echo $html;
 
     } else {
-        $html .= '
+        $html = '
             <div class="livechat-wrapper">
-                <div class="livechat-content"><img class="livechat-logo" src="'.LIVECHAT_URL.'images/logo.png" /></div>
+                <div class="livechat-content"><img class="livechat-logo" src="'.OC_LIVECHAT_URL.'images/logo.png" /></div>
                 <div class="livechat-content">
                     Kết nối ứng dụng với ứng dụng OnCustomer Livechat<br/>
                     để bắt đầu chăm sóc khách hàng của bạn trên website.
                 </div>
                 <div class="livechat-content">
-                    <img class="livechat-icon" src="'.LIVECHAT_URL.'images/check.png" />
+                    <img class="livechat-icon" src="'.OC_LIVECHAT_URL.'images/check.png" />
                     Bạn đã kết nối thành công với OnCustomer Livechat.
                 </div>
                 <div class="livechat-content">
@@ -76,7 +78,7 @@ function render_oncustomer_livechat_options_page(){
     
 }
 
-function add_oncustomer_livechat_snippet(){
+function oc_add_livechat_snippet(){
     $option = get_option('livechat_token');
     if($option != ''){
         $script = '
@@ -96,24 +98,25 @@ function add_oncustomer_livechat_snippet(){
     
 }
 
-function oncustomer_livechat_settings(){
+function oc_livechat_settings(){
     $option = get_option('livechat_token');
 
-    if($option == '' && isset($_GET['livechat_token']) && current_user_can('manage_options')){
-        add_option('livechat_token', $_GET['livechat_token']);
-        wp_safe_redirect(get_site_url().'/wp-admin/admin.php?page=oncustomer');
-    } else if($option != '' && isset($_GET['livechat_token']) && current_user_can('manage_options')){
-        update_option('livechat_token', $_GET['livechat_token']);
+    if(isset($_GET['livechat_token'])){
+        $livechat_token = $_GET['livechat_token'];
+
+        if(preg_match ('/^[0-9a-zA-Z]{1,}$/', $livechat_token) && current_user_can('manage_options')){
+            if($option == ''){
+                add_option('livechat_token', $livechat_token);
+            } else if($option != ''){
+                update_option('livechat_token', $livechat_token);   
+            }
+        }
         wp_safe_redirect(get_site_url().'/wp-admin/admin.php?page=oncustomer');
     }
-    
 }
 
-add_action('admin_menu', 'add_oncustomer_livechat_settings_page');
-add_action('wp_footer', 'add_oncustomer_livechat_snippet');
-add_action('admin_init', 'oncustomer_livechat_settings');
+add_action('admin_menu', 'oc_add_livechat_settings_page');
+add_action('wp_footer', 'oc_add_livechat_snippet');
+add_action('admin_init', 'oc_livechat_settings');
 
 ?>
-
- 
-
